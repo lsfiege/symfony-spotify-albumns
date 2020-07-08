@@ -28,7 +28,7 @@ class ArtistAlbumController extends AbstractController
         $errors = $validator->validate($artist);
 
         if (count($errors) > 0) {
-            $errorsString = (string) $errors;
+            $errorsString = (string)$errors;
 
             return $this->json([
                 'error' => $errorsString,
@@ -41,9 +41,31 @@ class ArtistAlbumController extends AbstractController
             return $this->json(['error' => $e->getMessage()], $e->getCode());
         }
 
+        $albums = $this->service->searchArtistAlbums($artist->id);
+
         return $this->json([
             'artist' => $name,
-            'albums' => [],
+            'albums' => $this->formatAlbumsResponse($albums),
         ]);
+    }
+
+    private function formatAlbumsResponse(array $albums): array
+    {
+        if (empty($albums)) {
+            return $albums;
+        }
+
+        $data = [];
+
+        foreach ($albums as $album) {
+            $data[] = [
+                'name' => $album->name,
+                'released' => $album->release_date,
+                'tracks' => $album->total_tracks,
+                'cover' => $album->images[0],
+            ];
+        }
+
+        return $data;
     }
 }
