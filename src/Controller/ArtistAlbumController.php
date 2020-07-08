@@ -2,36 +2,33 @@
 
 namespace App\Controller;
 
+use App\Entity\Artist;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Constraints\Length;
-use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
-use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ArtistAlbumController extends AbstractController
 {
     /**
-     * @Route("/artists/{artist}", methods="GET", name="artist_albums")
+     * @Route("/artists/{name}", methods="GET", name="artist_albums")
      */
-    public function albums($artist)
+    public function albums($name, ValidatorInterface $validator)
     {
-        $validator = Validation::createValidator();
+        $artist = new Artist($name);
 
-        $violations = $validator->validate($artist, [
-            new Length(['min' => 3]),
-            new NotBlank(),
-        ]);
+        $errors = $validator->validate($artist);
 
-        if (0 !== count($violations)) {
+        if (count($errors) > 0) {
+            $errorsString = (string) $errors;
+
             return $this->json([
-                'errors' => $this->getValidationMessages($violations),
+                'error' => $errorsString,
             ]);
         }
 
         return $this->json([
-            'artist' => $artist,
+            'artist' => $artist->getName(),
             'albums' => [],
         ]);
     }
