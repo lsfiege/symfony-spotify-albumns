@@ -3,13 +3,21 @@
 namespace App\Controller;
 
 use App\Entity\Artist;
+use App\Services\SpotifyService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ArtistAlbumController extends AbstractController
 {
+    /** @var SpotifyService */
+    private $service;
+
+    public function __construct(SpotifyService $service)
+    {
+        $this->service = $service;
+    }
+
     /**
      * @Route("/artists/{name}", methods="GET", name="artist_albums")
      */
@@ -27,20 +35,15 @@ class ArtistAlbumController extends AbstractController
             ]);
         }
 
-        return $this->json([
-            'artist' => $artist->getName(),
-            'albums' => [],
-        ]);
-    }
-
-    protected function getValidationMessages(ConstraintViolationListInterface $violations): array
-    {
-        $errors = [];
-
-        foreach ($violations as $violation) {
-            $errors[] = $violation->getMessage();
+        try {
+            $artist = $this->service->searchArtist($artist->getName());
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], $e->getCode());
         }
 
-        return $errors;
+        return $this->json([
+            'artist' => $name,
+            'albums' => [],
+        ]);
     }
 }
