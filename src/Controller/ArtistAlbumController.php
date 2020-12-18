@@ -2,7 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\Artist;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Constraints as Assert;
 use App\Services\SpotifyService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
@@ -19,13 +20,15 @@ class ArtistAlbumController extends AbstractController
     }
 
     /**
-     * @Route("/artists/{name}", methods="GET", name="artist_albums")
+     * @Route("/albums", methods="GET", name="artist_albums")
      */
-    public function albums($name, ValidatorInterface $validator)
+    public function albums(Request $request, ValidatorInterface $validator)
     {
-        $artist = new Artist($name);
+        $constraints = new Assert\Collection([
+            'q' => new Assert\Length(['min' => 3])
+        ]);
 
-        $errors = $validator->validate($artist);
+        $errors = $validator->validate($request->query->all(), $constraints);
 
         if (count($errors) > 0) {
             $errorsString = (string)$errors;
@@ -35,8 +38,10 @@ class ArtistAlbumController extends AbstractController
             ]);
         }
 
+        $artist = $request->get('q');
+
         try {
-            $artist = $this->service->searchArtist($artist->getName());
+            $artist = $this->service->searchArtist($artist);
         } catch (\Exception $e) {
             return $this->json(['error' => $e->getMessage()], $e->getCode());
         }
@@ -44,7 +49,7 @@ class ArtistAlbumController extends AbstractController
         $albums = $this->service->searchArtistAlbums($artist->id);
 
         return $this->json([
-            'artist' => $name,
+            'artist' => $artist,
             'albums' => $this->formatAlbumsResponse($albums),
         ]);
     }
