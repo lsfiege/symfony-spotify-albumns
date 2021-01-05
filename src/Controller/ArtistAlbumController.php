@@ -20,7 +20,7 @@ class ArtistAlbumController extends AbstractController
     }
 
     /**
-     * @Route("/albums", methods="GET", name="artist_albums")
+     * @Route("/albums", methods={"GET"}, name="artist_albums")
      */
     public function albums(Request $request, ValidatorInterface $validator)
     {

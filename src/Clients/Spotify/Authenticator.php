@@ -63,11 +63,6 @@ class Authenticator
         }
 
         $now = Carbon::now();
-
-        if ($now->isAfter($this->tokenExpiration)) {
-            return true;
-        }
-
-        return false;
+        return $now->isAfter($this->tokenExpiration);
     }
 }
